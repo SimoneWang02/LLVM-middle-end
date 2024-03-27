@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.inc": "cpp",
+        "ratio": "cpp",
+        "cmath": "cpp",
+        "*.def": "cpp"
+    }
+}

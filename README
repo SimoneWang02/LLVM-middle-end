@@ -1,6 +1,8 @@
 [ loop.c -> loop.bc ]
 clang -O2 -emit-llvm -c test/loop.c -o test/loop.bc
+llvm-dis test/loop.bc -o=./test/loop.ll
 
-./build/bin/opt -passes=testpass test/loop.bc -o test/loopTestPass.bc
+opt -passes=testpass test/loop.bc -o test/loopTestPass.bc
 
-./build/bin/opt -p localopts foo.ll -o foo.optimized.bc
+opt -p localopts ./test/foo.ll -o ./test/foo.optimized.bc
+llvm-dis ./test/foo.optimized.bc -o ./test/foo.optimized.ll

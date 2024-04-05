@@ -1,5 +1,5 @@
-int foo() {
+void foo() {
     int a = 5;
-    a = a * 4;
-    return a;
+    int b = 4 + 5;
+    int c = a + 5;
 }

@@ -14,40 +14,76 @@
 
 using namespace llvm;
 
+bool checkOperands(Instruction &Instr) {
+  // Entrambi gli operandi sono variabili
+  if (!isa<ConstantInt>(Instr.getOperand(0)) && !isa<ConstantInt>(Instr.getOperand(1)))
+    return false;
+  
+  // Se sono entrambe constati, sostituire l'istruzione con il calcolo e basta
+
+  return true;
+}
+
+bool algebraicIdentity(Instruction &Instr) {
+  if (!Instr.isBinaryOp() && !checkOperands(Instr))
+    return false;
+
+  bool isFirstOperandConst = isa<Constant>(Instr.getOperand(0));
+
+  APInt ConstValue = dyn_cast<ConstantInt>(isFirstOperandConst ? Instr.getOperand(0) : Instr.getOperand(1))->getValue();
+
+  if (
+    Instr.getOpcode() == Instruction::Add && ConstValue == 0 ||
+    Instr.getOpcode() == Instruction::Mul && ConstValue == 1
+  ) {
+    // Store
+
+    return true;
+  }
+
+  return false;
+}
+
 bool strengthReduction(Instruction &Instr) {
-  if (!Instr.isBinaryOp() || Instr.getOpcode() != Instruction::Mul)
+  if (!Instr.isBinaryOp() || !checkOperands(Instr))
     return false;
 
-  // Se entrambi costanti, ignora
-  if (dyn_cast<ConstantInt>(Instr.getOperand(0)) && dyn_cast<ConstantInt>(Instr.getOperand(1)))
+  // Se entrambi costanti, ignora (da togliere)
+  if (isa<ConstantInt>(Instr.getOperand(0)) && isa<ConstantInt>(Instr.getOperand(1)))
     return false;
 
-  // Se entrambe variabili, ignora
-  if (!dyn_cast<ConstantInt>(Instr.getOperand(0)) && !dyn_cast<ConstantInt>(Instr.getOperand(1)))
+  bool isMul = Instr.getOpcode() == Instruction::Mul;
+    
+  if (!isMul && Instr.getOpcode() != Instruction::SDiv)
     return false;
 
   // Prende il primo operando costante
-  ConstantInt *ConstOp = dyn_cast<ConstantInt>(Instr.getOperand(0)) ? dyn_cast<ConstantInt>(Instr.getOperand(0)) : dyn_cast<ConstantInt>(Instr.getOperand(1));
+  ConstantInt *ConstOp = isa<ConstantInt>(Instr.getOperand(0)) ? dyn_cast<ConstantInt>(Instr.getOperand(0)) : dyn_cast<ConstantInt>(Instr.getOperand(1));
 
   // Left shifting dell'altro operando al log2 più vicino alla costante
   APInt ConstVal = ConstOp->getValue();
   int NearestLog = ConstVal.nearestLogBase2();
-  ConstantInt *ConstLog = ConstantInt::get(ConstOp->getContext(), APInt(32, NearestLog));
-  Instruction *ShiftInst = BinaryOperator::Create(Instruction::Shl, Instr.getOperand(dyn_cast<ConstantInt>(Instr.getOperand(0)) ? 1 : 0), ConstLog);
 
-  ShiftInst->insertAfter(&Instr);
-
-  // Si aggiunge la differenza
+  // Si aggiunge la differenza all'altro operando
   APInt Rest = ConstVal - (1 << NearestLog);
 
+  if (Rest.abs().ugt(1))
+    return false;
+
+  ConstantInt *ConstLog = ConstantInt::get(ConstOp->getContext(), APInt(32, NearestLog));
+  Instruction *ShiftInst = BinaryOperator::Create(Instruction::Shl, Instr.getOperand(isa<ConstantInt>(Instr.getOperand(0)) ? 1 : 0), ConstLog);
+  
   if (Rest != 0) {
-    ConstantInt *ConstRest = ConstantInt::get(ConstOp->getContext(), Rest);
-    Instruction *RestInst = BinaryOperator::Create(Instruction::Add, Instr.getOperand(dyn_cast<ConstantInt>(Instr.getOperand(0)) ? 1 : 0), ConstRest);
+    Instruction *RestInst = BinaryOperator::Create(Rest.ugt(0) ? Instruction::Add : Instruction::Sub, ShiftInst, Instr.getOperand(isa<ConstantInt>(Instr.getOperand(0)) ? 1 : 0));
+
+    ShiftInst->insertAfter(&Instr);
 
     RestInst->insertAfter(ShiftInst);
 
     Instr.replaceAllUsesWith(RestInst);
   } else {
+    ShiftInst->insertAfter(&Instr);
+
     Instr.replaceAllUsesWith(ShiftInst);
   }
 
@@ -57,6 +93,9 @@ bool strengthReduction(Instruction &Instr) {
 bool runOnBasicBlock(BasicBlock &B) {
   std::vector<Instruction *> toRemove;
   for (Instruction &Instr : B) {
+    // if (algebraicIdentity(Instr))
+    //   toRemove.push_back(&Instr);
+
     if (strengthReduction(Instr))
       toRemove.push_back(&Instr);
   }
@@ -64,6 +103,13 @@ bool runOnBasicBlock(BasicBlock &B) {
   for (Instruction *Instr : toRemove) {
     Instr->eraseFromParent();
   }
+
+
+
+
+
+
+
 
   // Preleviamo le prime due istruzioni del BB
   // Instruction &Inst1st = *B.begin(), &Inst2nd = *(++B.begin());

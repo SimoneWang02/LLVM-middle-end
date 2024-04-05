@@ -70,10 +70,13 @@ bool strengthReduction(Instruction &Instr) {
   if (Rest.abs().ugt(1))
     return false;
 
+  if (!isMul && Rest != 0)
+    return false;
+
   ConstantInt *ConstLog = ConstantInt::get(ConstOp->getContext(), APInt(32, NearestLog));
-  Instruction *ShiftInst = BinaryOperator::Create(Instruction::Shl, Instr.getOperand(isa<ConstantInt>(Instr.getOperand(0)) ? 1 : 0), ConstLog);
+  Instruction *ShiftInst = BinaryOperator::Create(isMul ? Instruction::Shl : Instruction::AShr, Instr.getOperand(isa<ConstantInt>(Instr.getOperand(0)) ? 1 : 0), ConstLog);
   
-  if (Rest != 0) {
+  if (isMul && Rest != 0) {
     Instruction *RestInst = BinaryOperator::Create(Rest.ugt(0) ? Instruction::Add : Instruction::Sub, ShiftInst, Instr.getOperand(isa<ConstantInt>(Instr.getOperand(0)) ? 1 : 0));
 
     ShiftInst->insertAfter(&Instr);

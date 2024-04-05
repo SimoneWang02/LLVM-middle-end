@@ -6,7 +6,7 @@ define dso_local i32 @foo(i32 noundef %0, i32 noundef %1) {
   %4 = shl i32 %3, 6
   %5 = add i32 %4, %3
   %6 = shl i32 %0, 1
-  %7 = shl i32 %6, 2
+  %7 = ashr i32 %6, 2
   %8 = mul nsw i32 %5, %7
   ret i32 %8
 }

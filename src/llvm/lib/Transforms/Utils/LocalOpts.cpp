@@ -9,6 +9,7 @@
 #include "llvm/Transforms/Utils/LocalOpts.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/IRBuilder.h"
 #include <iostream>
 #include <vector>
 
@@ -19,13 +20,15 @@ bool checkOperands(Instruction &Instr) {
   if (!isa<ConstantInt>(Instr.getOperand(0)) && !isa<ConstantInt>(Instr.getOperand(1)))
     return false;
   
-  // Se sono entrambe constati, sostituire l'istruzione con il calcolo e basta
+  // Entrambi gli operandi sono costanti
+  if (isa<ConstantInt>(Instr.getOperand(0)) && isa<ConstantInt>(Instr.getOperand(1)))
+    return false;
 
   return true;
 }
 
 bool algebraicIdentity(Instruction &Instr) {
-  if (!Instr.isBinaryOp() && !checkOperands(Instr))
+  if (!Instr.isBinaryOp() || !checkOperands(Instr))
     return false;
 
   bool isFirstOperandConst = isa<Constant>(Instr.getOperand(0));
@@ -33,10 +36,10 @@ bool algebraicIdentity(Instruction &Instr) {
   APInt ConstValue = dyn_cast<ConstantInt>(isFirstOperandConst ? Instr.getOperand(0) : Instr.getOperand(1))->getValue();
 
   if (
-    Instr.getOpcode() == Instruction::Add && ConstValue == 0 ||
-    Instr.getOpcode() == Instruction::Mul && ConstValue == 1
+    (Instr.getOpcode() == Instruction::Add && ConstValue == 0) ||
+    (Instr.getOpcode() == Instruction::Mul && ConstValue == 1)
   ) {
-    // Store
+    Instr.replaceAllUsesWith(Instr.getOperand(isFirstOperandConst ? 1 : 0));
 
     return true;
   }
@@ -46,10 +49,6 @@ bool algebraicIdentity(Instruction &Instr) {
 
 bool strengthReduction(Instruction &Instr) {
   if (!Instr.isBinaryOp() || !checkOperands(Instr))
-    return false;
-
-  // Se entrambi costanti, ignora (da togliere)
-  if (isa<ConstantInt>(Instr.getOperand(0)) && isa<ConstantInt>(Instr.getOperand(1)))
     return false;
 
   bool isMul = Instr.getOpcode() == Instruction::Mul;
@@ -96,8 +95,8 @@ bool strengthReduction(Instruction &Instr) {
 bool runOnBasicBlock(BasicBlock &B) {
   std::vector<Instruction *> toRemove;
   for (Instruction &Instr : B) {
-    // if (algebraicIdentity(Instr))
-    //   toRemove.push_back(&Instr);
+    if (algebraicIdentity(Instr))
+      toRemove.push_back(&Instr);
 
     if (strengthReduction(Instr))
       toRemove.push_back(&Instr);

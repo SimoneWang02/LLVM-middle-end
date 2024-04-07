@@ -37,7 +37,9 @@ bool algebraicIdentity(Instruction &Instr) {
 
   if (
     (Instr.getOpcode() == Instruction::Add && ConstValue == 0) ||
-    (Instr.getOpcode() == Instruction::Mul && ConstValue == 1)
+    (Instr.getOpcode() == Instruction::Sub && ConstValue == 0) ||
+    (Instr.getOpcode() == Instruction::Mul && ConstValue == 1) ||
+    (Instr.getOpcode() == Instruction::SDiv && ConstValue == 1)
   ) {
     Instr.replaceAllUsesWith(Instr.getOperand(isFirstOperandConst ? 1 : 0));
 

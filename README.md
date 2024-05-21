@@ -1,12 +1,12 @@
-### 1° Assignment - Optimization
+## 1° Assignment - Optimization
 
 [Repository](https://github.com/SimoneWang02/first-assignment-llvm)
 
-### 2° Assignment - DFA
+## 2° Assignment - DFA
 
 [Link](https://docs.google.com/document/d/1Tt-8a6um9oJ8uDEFyBt5Qrmv6G_oo-h8WGUMt3skyhY/edit?usp=sharing) 
 
-### 3° Assignment - LICM
+## 3° Assignment - LICM
 
 ```
 clang-17 -O0 -emit-llvm -S -c test/loop.c -o test/loop.ll

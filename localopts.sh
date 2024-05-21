@@ -6,6 +6,5 @@ then
     cd ..
 fi
 
-clear
 build/bin/opt -p localopts test/foo.ll -o test/foo.optimized.bc
 llvm-dis-17 test/foo.optimized.bc -o test/foo.optimized.ll

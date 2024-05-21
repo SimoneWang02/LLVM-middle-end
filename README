@@ -1,8 +1,6 @@
-[ loop.c -> loop.bc ]
-clang -O2 -emit-llvm -c test/loop.c -o test/loop.bc
-llvm-dis test/loop.bc -o=./test/loop.ll
+[ LICM ]
+clang-17 -O0 -emit-llvm -S -c test/loop.c -o test/loop.ll
+build/bin/opt -p mem2reg test/loop.ll -o test/loop.base.bc
+llvm-dis-17 test/loop.base.bc -o test/loop.base.ll
 
-opt -passes=testpass test/loop.bc -o test/loopTestPass.bc
-
-opt -p localopts ./test/foo.ll -o ./test/foo.optimized.bc
-llvm-dis ./test/foo.optimized.bc -o ./test/foo.optimized.ll
+Remember to comment the attributes in loop.ll

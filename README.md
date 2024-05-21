@@ -8,6 +8,6 @@ build/bin/opt -p mem2reg test/loop.ll -o test/loop.base.bc
 llvm-dis-17 test/loop.base.bc -o test/loop.base.ll
 ```
 
-Project done by
+Authors
 + Morselli Leonardo
 + Wang Simone

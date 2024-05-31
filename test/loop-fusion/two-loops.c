@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+// Monodimensionale e poi testare con N come argomento
+
 #define N 3
 
 void foo(int b[N][N], int c[N][N]) {

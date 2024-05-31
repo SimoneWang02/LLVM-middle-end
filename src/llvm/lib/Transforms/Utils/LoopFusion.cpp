@@ -4,39 +4,15 @@ using namespace llvm;
 using namespace std;
 
 bool isAdjacent(Loop *CurrentLoop, Loop *NextLoop) {
-    // (DOMANDA --> ha usato il plurale, quindi entrambi devono essere concordanti?)
-    if (CurrentLoop->isGuarded() != NextLoop->isGuarded())
-        return false;
-
-    if (CurrentLoop->isGuarded()) {
-        auto GuardBranch = CurrentLoop->getLoopGuardBranch();
-
-        auto iter = NextLoop->block_begin();
-        BasicBlock *NextLoopEntryBlock = *iter;
-
-        // (DOMANDA --> Ma funziona? Come faccio a testare il guard branch?)
-        return GuardBranch->getSuccessor(0) == NextLoopEntryBlock;
-    }
-
-    // auto LastIter = CurrentLoop->block_end() - 1;
-    // BasicBlock *ExitBlock = *LastIter;
     BasicBlock *ExitBlock = CurrentLoop->getExitBlock();
 
-    // (DOMANDA --> Ha solamente uno o più successori?)
-    // BasicBlock *SingleSuccessor = dyn_cast<BasicBlock>(ExitBlock->getTerminator()->getSuccessor(0));
-    BasicBlock *SingleSuccessor = ExitBlock->getSingleSuccessor();
-
-    // (NOTA --> Ho provato e non sono uguali bruh)
-    outs() << *CurrentLoop->getLoopPreheader() << "\n" << *NextLoop->getLoopPreheader() << "\n";
-
-    return SingleSuccessor == NextLoop->getLoopPreheader();
+    if (NextLoop->isGuarded())
+        return ExitBlock->getSingleSuccessor() == NextLoop->getLoopGuardBranch()->getParent();
+    return ExitBlock->getSingleSuccessor() == NextLoop->getLoopPreheader();
 }
 
-// (NOTA --> Non è testato, è pura teoria)
-// (DOMANDA --> Forse bisogna guardare confrontare il depth dei loop e controllare ricorsivamente i trip count dei nest loops)
+// Bisogna poi controllare anche i nest loops ricorsivamente
 bool hasEqualTripCount(ScalarEvolution &SE, Loop *CurrentLoop, Loop *NextLoop) {
-    // (DOMANDA --> getBackedgeTakenCount è giusto? Secondo la documentazione è più corretto perché conta le volte in cui il 
-    // programma passa per il back edge e quindi evita il caso la condizione del loop non si avveri, a differenza di getTripCountFromExitCount)
     const SCEV *CurrentLoopTripCount = SE.getBackedgeTakenCount(CurrentLoop);
     const SCEV *NextLoopTripCount = SE.getBackedgeTakenCount(NextLoop);
 
@@ -46,7 +22,10 @@ bool hasEqualTripCount(ScalarEvolution &SE, Loop *CurrentLoop, Loop *NextLoop) {
 }
 
 bool isControlFlowEquivalent(DominatorTree &DT, PostDominatorTree &PDT, Loop *CurrentLoop, Loop *NextLoop) {
+    BasicBlock *CurrentLoopPreheader = CurrentLoop->getLoopPreheader();
+    BasicBlock *NextLoopPreheader = NextLoop->getLoopPreheader();
 
+    return DT.dominates(CurrentLoopPreheader, NextLoopPreheader) && PDT.dominates(NextLoopPreheader, CurrentLoopPreheader);
 }
 
 PreservedAnalyses LoopFusion::run(Function &F, FunctionAnalysisManager &AM) {
@@ -81,6 +60,7 @@ PreservedAnalyses LoopFusion::run(Function &F, FunctionAnalysisManager &AM) {
 
             outs() << "Adjacent\n";
 
+            // Ignorare gli array bidimensionali al momento e quindi con nest loops
             if (hasEqualTripCount(SE, CurrentLoop, NextLoop)) {
                 DominatorTree &DT = AM.getResult<DominatorTreeAnalysis>(F);
                 PostDominatorTree &PDT = AM.getResult<PostDominatorTreeAnalysis>(F);

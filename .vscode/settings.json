@@ -1,10 +1,29 @@
 {
-    "files.associations": {
-        "*.inc": "cpp",
-        "ratio": "cpp",
-        "cmath": "cpp",
-        "*.def": "cpp"
-    },
-    "C_Cpp.errorSquiggles": "enabled",
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+	"files.associations": {
+		"*.inc": "cpp",
+		"ratio": "cpp",
+		"cmath": "cpp",
+		"*.def": "cpp",
+		"stdio.h": "c",
+		"__bit_reference": "cpp",
+		"__hash_table": "cpp",
+		"__split_buffer": "cpp",
+		"__tree": "cpp",
+		"array": "cpp",
+		"deque": "cpp",
+		"forward_list": "cpp",
+		"initializer_list": "cpp",
+		"list": "cpp",
+		"map": "cpp",
+		"set": "cpp",
+		"string": "cpp",
+		"string_view": "cpp",
+		"unordered_map": "cpp",
+		"unordered_set": "cpp",
+		"vector": "cpp",
+		"queue": "cpp",
+		"stack": "cpp"
+	},
+	"C_Cpp.errorSquiggles": "enabled",
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
 }

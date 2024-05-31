@@ -1,0 +1,23 @@
+#ifndef LLVM_TRANSFORMS_LOOPFUSION_H
+#define LLVM_TRANSFORMS_LOOPFUSION_H
+
+#include "llvm/IR/PassManager.h"
+#include "llvm/Transforms/Scalar/LoopPassManager.h"
+#include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/IR/Dominators.h"
+#include "llvm/Analysis/PostDominators.h"
+
+namespace llvm {
+
+class LoopFusion : public PassInfoMixin<LoopFusion> {
+
+public:
+    PreservedAnalyses run(
+        Function &F,
+        FunctionAnalysisManager &AM
+    );
+};
+
+}
+
+#endif

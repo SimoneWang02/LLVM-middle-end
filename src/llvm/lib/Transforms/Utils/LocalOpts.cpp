@@ -92,6 +92,16 @@ bool strengthReduction(Instruction &Instr) {
   return true;
 }
 
+/*-- Multi Instruction Optimization ---
+
+a = b + 1
+c = a - 1
+
+a = b + 1
+c = b
+
+------------------------------------ */
+
 void multiInstructionOptimization(Instruction &Instr, std::vector<Instruction *> &toRemove) {
   if (!Instr.isBinaryOp() || !checkOperands(Instr))
     return;

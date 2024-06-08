@@ -6,6 +6,7 @@
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/Analysis/PostDominators.h"
+#include "llvm/Analysis/DependenceAnalysis.h"
 
 namespace llvm {
 

@@ -173,21 +173,6 @@ bool fuseLoops(Loop *L1, Loop *L2, LoopInfo &LI) {
     BasicBlock *LatchL2 = L2->getLoopLatch();
     TerminatorHeaderL2->setSuccessor(0, LatchL2);
 
-    // Aggiungo i BasicBlock di L2 a L1 per il LoopInfo
-    for (BasicBlock *BB : L2->getBlocks()) {
-      if (BB != L2->getHeader() && BB != L2->getLoopLatch()) {
-        L1->addBasicBlockToLoop(BB, LI);
-      }    
-    }
-
-    // Rimuovi L2 dalla lista dei loop dato l'iteratore appropriato dal LoopInfo
-    for (auto Iter = LI.begin(); Iter != LI.end(); ++Iter) {
-        if (*Iter == L2) {
-            LI.removeLoop(Iter);
-            break;
-        }
-    }
-
     return true;
 }
 
